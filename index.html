@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>個股期貨監控儀表板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface-2: #f0efe9;
+      --border: #e2e0d8;
+      --text-primary: #1a1916;
+      --text-secondary: #6b6860;
+      --text-muted: #9e9c96;
+      --accent: #1a5c3a;
+      --accent-light: #e8f3ed;
+      --red: #c0392b;
+      --red-light: #fdf0ee;
+      --green: #1a5c3a;
+      --green-light: #e8f3ed;
+      --gold: #b8860b;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .update-badge {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      background: var(--surface-2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    #update-time { color: var(--accent); font-weight: 500; }
+
+    /* ── Main Layout ── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ── Page Title ── */
+    .page-title {
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .page-title h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .page-title p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Stats Cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-primary);
+      letter-spacing: -1px;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .stat-card.accent { border-left: 3px solid var(--accent); }
+    .stat-card.red    { border-left: 3px solid var(--red); }
+    .stat-card.gold   { border-left: 3px solid var(--gold); }
+
+    /* ── Section ── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      overflow: hidden;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+    .section-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .section-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Ranking Table ── */
+    .ranking-table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th:first-child { padding-left: 24px; }
+    thead th:last-child  { padding-right: 24px; }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+    tbody td {
+      padding: 14px 16px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    tbody td:first-child { padding-left: 24px; }
+    tbody td:last-child  { padding-right: 24px; }
+
+    /* Rank badge */
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+    }
+    .rank.top1 { background: #fef9e7; color: #b8860b; }
+    .rank.top2 { background: #f4f4f4; color: #6b6868; }
+    .rank.top3 { background: #fef0e8; color: #c0671a; }
+
+    .stock-name { font-weight: 600; color: var(--text-primary); }
+    .stock-code {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .vol-bar-wrap { display: flex; align-items: center; gap: 10px; min-width: 140px; }
+    .vol-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .vol-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .vol-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .change-up   { color: var(--red);  font-weight: 600; font-family: 'DM Mono', monospace; }
+    .change-down { color: var(--green); font-weight: 600; font-family: 'DM Mono', monospace; }
+    .change-flat { color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+    .trend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .trend-up   { background: var(--red-light);   color: var(--red); }
+    .trend-down { background: var(--green-light); color: var(--green); }
+    .trend-flat { background: var(--surface-2);   color: var(--text-muted); }
+
+    /* ── History Section ── */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      padding: 20px 24px;
+    }
+    .history-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .history-card:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .history-date {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-primary);
+    }
+    .history-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .history-arrow {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* ── Loading / Empty ── */
+    .loading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+    .empty-state p  { font-size: 14px; line-height: 1.7; }
+
+    /* ── Date Tabs ── */
+    .date-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .date-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* ── Notice Banner ── */
+    .notice {
+      background: #fffbeb;
+      border: 1px solid #f6d860;
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 13px;
+      color: #7c5f00;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      animation: fadeUp 0.5s 0.05s ease both;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 40px;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .container { padding: 20px 16px; }
+      .page-title h1 { font-size: 22px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 22px; }
+      .header-inner { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">📈</div>
+      個股期貨監控
+    </div>
+    <div class="header-meta">
+      <div class="update-badge">最後更新：<span id="update-time">讀取中…</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="notice">
+    ⚠️ <span>本資料每日下午 6:00 自動從市場取得，僅供個人研究參考，不構成任何投資建議。</span>
+  </div>
+
+  <div class="page-title">
+    <h1>個股期貨成交量監控</h1>
+    <p>追蹤每日成交量遞增趨勢，自動排行前 20 名個股期貨</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">今日收錄筆數</div>
+      <div class="stat-value" id="stat-count">—</div>
+      <div class="stat-sub">個股期貨商品</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">成交量最大</div>
+      <div class="stat-value" id="stat-top-vol">—</div>
+      <div class="stat-sub" id="stat-top-name">—</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">量增最強</div>
+      <div class="stat-value" id="stat-top-growth">—</div>
+      <div class="stat-sub" id="stat-top-growth-name">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">資料日期</div>
+      <div class="stat-value" id="stat-date" style="font-size:18px;">—</div>
+      <div class="stat-sub">自動每日更新</div>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        🏆 成交量遞增排行
+        <span class="badge">TOP 20</span>
+      </div>
+      <div id="ranking-date-tabs" class="section-desc"></div>
+    </div>
+    <div class="date-tabs" id="date-tabs"></div>
+    <div id="ranking-content">
+      <div class="loading-wrap"><div class="spinner"></div><span>載入資料中…</span></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="section" style="animation-delay:0.2s">
+    <div class="section-header">
+      <div class="section-title">📅 歷史記錄</div>
+      <div class="section-desc">點擊查看各日完整資料</div>
+    </div>
+    <div id="history-content">
+      <div class="loading-wrap"><div class="spinner"></div><span>載入歷史資料…</span></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  資料來源：萬得通 wantgoo.com｜本站為個人研究用途，每日自動更新
+</footer>
+
+<script>
+// ── 設定 ──────────────────────────────────────────────
+const DATA_BASE = './data/';
+const MAX_RANK  = 20;
+
+// ── 工具函式 ──────────────────────────────────────────
+function fmt(n) {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 10000) return (n / 10000).toFixed(1) + '萬';
+  return Number(n).toLocaleString();
+}
+function pct(n) {
+  if (n == null || isNaN(n)) return '—';
+  return (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%';
+}
+function changeClass(n) {
+  if (n > 0) return 'change-up';
+  if (n < 0) return 'change-down';
+  return 'change-flat';
+}
+function trendChip(n) {
+  if (n > 0)  return `<span class="trend-chip trend-up">▲ ${pct(n)}</span>`;
+  if (n < 0)  return `<span class="trend-chip trend-down">▼ ${pct(n)}</span>`;
+  return `<span class="trend-chip trend-flat">— ${pct(n)}</span>`;
+}
+function rankBadge(i) {
+  const cls = i === 1 ? 'top1' : i === 2 ? 'top2' : i === 3 ? 'top3' : '';
+  return `<span class="rank ${cls}">${i}</span>`;
+}
+
+// ── 資料讀取 ──────────────────────────────────────────
+async function fetchJSON(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error('Not found');
+  return res.json();
+}
+
+async function loadIndex() {
+  try {
+    return await fetchJSON(DATA_BASE + 'index.json');
+  } catch {
+    return null;
+  }
+}
+
+async function loadRanking(date) {
+  try {
+    return await fetchJSON(DATA_BASE + 'ranking_' + date + '.json');
+  } catch {
+    return null;
+  }
+}
+
+// ── 渲染排行表 ────────────────────────────────────────
+function renderRankingTable(data) {
+  if (!data || !data.ranking || data.ranking.length === 0) {
+    return `<div class="empty-state">
+      <div class="icon">📭</div>
+      <h3>尚無資料</h3>
+      <p>請等待每日下午 6:00 自動更新，<br>或確認 GitHub Actions 已正確設定。</p>
+    </div>`;
+  }
+
+  const maxVol = Math.max(...data.ranking.map(d => d.volume || 0));
+
+  const rows = data.ranking.slice(0, MAX_RANK).map((d, i) => {
+    const barPct = maxVol > 0 ? ((d.volume / maxVol) * 100).toFixed(1) : 0;
+    return `
+    <tr>
+      <td>${rankBadge(i + 1)}</td>
+      <td>
+        <div class="stock-name">${d.name || '—'}</div>
+        <div class="stock-code">${d.code || '—'}</div>
+      </td>
+      <td>
+        <div class="vol-bar-wrap">
+          <div class="vol-bar-bg"><div class="vol-bar-fill" style="width:${barPct}%"></div></div>
+          <span class="vol-num">${fmt(d.volume)}</span>
+        </div>
+      </td>
+      <td><span class="${changeClass(d.volume_change_pct)}">${pct(d.volume_change_pct)}</span></td>
+      <td>${trendChip(d.price_change_pct)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;">${d.price != null ? Number(d.price).toFixed(2) : '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${d.open_interest != null ? fmt(d.open_interest) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="ranking-table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>商品名稱</th>
+        <th>成交量</th>
+        <th>量增幅</th>
+        <th>漲跌幅</th>
+        <th>成交價</th>
+        <th>未平倉</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── 更新統計卡 ────────────────────────────────────────
+function updateStats(data, date) {
+  document.getElementById('stat-date').textContent = date || '—';
+  if (!data || !data.ranking) return;
+  const r = data.ranking;
+  document.getElementById('stat-count').textContent = r.length;
+  const topVol = r.reduce((a, b) => (a.volume > b.volume ? a : b), r[0]);
+  document.getElementById('stat-top-vol').textContent = fmt(topVol?.volume);
+  document.getElementById('stat-top-name').textContent = topVol?.name || '—';
+  const topGrowth = r.reduce((a, b) => ((a.volume_change_pct||0) > (b.volume_change_pct||0) ? a : b), r[0]);
+  document.getElementById('stat-top-growth').textContent = pct(topGrowth?.volume_change_pct);
+  document.getElementById('stat-top-growth-name').textContent = topGrowth?.name || '—';
+}
+
+// ── 渲染歷史列表 ──────────────────────────────────────
+function renderHistory(dates) {
+  if (!dates || dates.length === 0) {
+    return `<div class="empty-state">
+      <div class="icon">📁</div>
+      <h3>尚無歷史資料</h3>
+      <p>資料將在每日自動爬取後累積。</p>
+    </div>`;
+  }
+  const cards = dates.map(d => `
+    <div class="history-card" onclick="loadAndShow('${d}')">
+      <div>
+        <div class="history-date">${d}</div>
+        <div class="history-meta">點擊查看當日前 20 名</div>
+      </div>
+      <span class="history-arrow">›</span>
+    </div>`).join('');
+  return `<div class="history-grid">${cards}</div>`;
+}
+
+// ── 主流程 ────────────────────────────────────────────
+let allDates = [];
+let currentDate = null;
+
+async function loadAndShow(date) {
+  currentDate = date;
+  // 更新 Tab 狀態
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.date === date);
+  });
+  document.getElementById('ranking-content').innerHTML =
+    `<div class="loading-wrap"><div class="spinner"></div><span>載入 ${date} 資料…</span></div>`;
+  const data = await loadRanking(date);
+  document.getElementById('ranking-content').innerHTML = renderRankingTable(data);
+  updateStats(data, date);
+}
+
+async function init() {
+  const idx = await loadIndex();
+
+  // 更新時間
+  document.getElementById('update-time').textContent =
+    idx?.last_updated || '資料未就緒';
+
+  if (!idx || !idx.dates || idx.dates.length === 0) {
+    document.getElementById('ranking-content').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🕕</div>
+        <h3>等待首次資料更新</h3>
+        <p>系統將於每日下午 6:00 自動擷取資料。<br>
+           若您剛部署完成，請等待 GitHub Actions 首次執行，<br>
+           或手動在 GitHub 觸發 workflow。</p>
+      </div>`;
+    document.getElementById('history-content').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📁</div>
+        <h3>尚無歷史資料</h3>
+        <p>資料將在每日自動爬取後累積。</p>
+      </div>`;
+    return;
+  }
+
+  allDates = idx.dates.sort((a, b) => b.localeCompare(a)); // 最新在前
+
+  // 渲染 Date Tabs（最近 7 天）
+  const recentDates = allDates.slice(0, 7);
+  const tabsHtml = recentDates.map(d =>
+    `<button class="tab-btn" data-date="${d}" onclick="loadAndShow('${d}')">${d}</button>`
+  ).join('');
+  document.getElementById('date-tabs').innerHTML = tabsHtml;
+
+  // 渲染歷史
+  document.getElementById('history-content').innerHTML = renderHistory(allDates);
+
+  // 預設載入最新一天
+  await loadAndShow(allDates[0]);
+}
+
+init();
+</script>
+</body>
+</html>
