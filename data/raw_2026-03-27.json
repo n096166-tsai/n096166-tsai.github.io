@@ -1,12 +1,12 @@
 {
   "date": "2026-03-27",
-  "fetched": "2026-03-29 05:44",
+  "fetched": "2026-03-30 15:55",
   "records": [
     {
       "code": "2887",
       "name": "台新金",
       "volume": 3000.0,
-      "price": 47.3,
+      "price": 47.29999923706055,
       "open_interest": null
     }
   ]
